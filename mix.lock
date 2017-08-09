@@ -1,0 +1,11 @@
+%{"connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], []},
+  "distance": {:hex, :distance, "0.2.2", "76f7cd6b6e21b3c1430a0776d594955baafd9ebf1133f98f62cdbb180074215a", [:mix], []},
+  "envelope": {:hex, :envelope, "0.4.0", "c472cb82b87210b81a2a065833eda511a170fa8e07793f6192725d68a2f8f7d0", [:mix], [{:distance, "~> 0.2.1", [hex: :distance, optional: false]}, {:geo, "~> 1.0", [hex: :geo, optional: false]}]},
+  "geo": {:hex, :geo, "1.5.0", "14301aae05bc9124f36b3726e028830477d2ee6b397b7a00b98eca3da06de193", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, optional: true]}, {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", [hex: :poison, optional: true]}, {:postgrex, "~> 0.13", [hex: :postgrex, optional: true]}]},
+  "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
+  "redix": {:hex, :redix, "0.6.1", "20986b0e02f02b13e6f53c79a1ae70aa83147488c408f40275ec261f5bb0a6d0", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}]},
+  "seg_seg": {:hex, :seg_seg, "0.0.1", "3bf890734bfc4d69070b259f041263368ae9d2a003ed6e66de6b54523d970db1", [:mix], [{:vector, "~> 0.2.1", [hex: :vector, optional: false]}]},
+  "spatial_hash": {:hex, :spatial_hash, "0.1.2", "a3cd54bae0abebd6ac327397b195352c0ba06a1185aebe992a186b3ffce91d90", [:mix], [{:envelope, "~> 0.2.0", [hex: :envelope, optional: false]}]},
+  "topo": {:hex, :topo, "0.1.2", "1e075ef880e751a5b1fd330de7f26d81ee96a095eac991fff819ac4623311f5a", [:mix], [{:geo, "~> 1.0", [hex: :geo, optional: false]}, {:seg_seg, "~> 0.0.0", [hex: :seg_seg, optional: false]}, {:vector, "~> 0.2.0", [hex: :vector, optional: false]}]},
+  "uuid": {:hex, :uuid, "1.1.7", "007afd58273bc0bc7f849c3bdc763e2f8124e83b957e515368c498b641f7ab69", [:mix], []},
+  "vector": {:hex, :vector, "0.2.2", "2a36b57c5307bf7e35b7dd4545e7abf827bbc469a2fb37e25ac331a063df7de9", [:mix], []}}
