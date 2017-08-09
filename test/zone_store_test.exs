@@ -7,6 +7,7 @@ defmodule Carmen.ZoneStoreTest do
   @in_shape1 %Geo.Point{coordinates: {136.884723, 35.171848}}
   @in_both %Geo.Point{coordinates: {136.884149, 35.172102}}
   @in_concavity %Geo.Point{coordinates: {136.884831, 35.172137}}
+  @in_shape3 %Geo.Point{coordinates: {136.8844503, 35.172896}}
 
   @shape1 %Geo.Polygon{ coordinates: [
           [
@@ -35,38 +36,52 @@ defmodule Carmen.ZoneStoreTest do
         ]
       }
 
+  @shape3 %Geo.Polygon{ coordinates: [
+          [
+            { 136.8841016292572, 35.17281732005817 },
+            { 136.88421428203583, 35.172694540711184 },
+            { 136.88479363918304, 35.1729839488754 },
+            { 136.88473999500275, 35.17311988265755 },
+            { 136.8841016292572, 35.17281732005817 }
+          ]
+        ]
+      }
+
 
   setup do
-    [id: UUID.uuid4()]
+    [Zone, ZoneEnv, MapCell] |>
+      Enum.map(&:mnesia.clear_table/1)
+
+    [ id1: Store.put_zone(@shape1),
+      id2: Store.put_zone(@shape2) ]
   end
 
-  test "put and get shape", %{id: id} do
-    Store.put_zone(id, @shape1)
+  test "put and get shape", %{id1: id} do
     assert Store.get_zone(id) == @shape1
   end
 
-  test "update a shape", %{id: id} do
-    Store.put_zone(id, @shape1)
+  test "update a shape", %{id1: id} do
     Store.put_zone(id, @shape2)
     assert Store.get_zone(id) == @shape2
   end
 
-  test "get a shape that doesn't exist", %{id: id} do
-    assert Store.get_zone(id) == nil
+  test "get a shape that doesn't exist" do
+    assert Store.get_zone(UUID.uuid4()) == nil
   end
 
-  test "intersecting zones for a given point", %{id: id1} do
-    id2 = UUID.uuid4()
-
-    IO.inspect Store.put_zone(id1, @shape1)
-    Store.put_zone(id2, @shape2)
-
+  test "intersecting zones for a given point", %{id1: id1, id2: id2} do
     assert Store.intersections(@in_shape1) == [id1]
-    assert Store.intersections(@in_both) == [id1, id2]
+    assert Store.intersections(@in_both) |> Enum.sort == [id1, id2] |> Enum.sort
   end
 
-  test "intersecting zones for a point inside concavity", %{id: id} do
-    Store.put_zone(id, @shape1)
+  test "intersecting zones for a point inside concavity", %{id1: id} do
     assert Store.intersections(@in_concavity) == []
+  end
+
+  test "updating zone and grid", %{id1: id1, id2: id2} do
+    Store.put_zone(id1, @shape3)
+    assert Store.intersections(@in_both) == [id2]
+    assert Store.intersections(@in_shape1) == []
+    assert Store.intersections(@in_shape3) == [id1]
   end
 end

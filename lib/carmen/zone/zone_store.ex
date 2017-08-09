@@ -17,7 +17,6 @@ defmodule Carmen.Zone.Store do
     Mnesia.create_table(Zone, [attributes: [:id, :shape]])
     Mnesia.create_table(ZoneEnv, [attributes: [:id, :envelope]])
     Mnesia.create_table(MapCell, [attributes: [:hash, :objects]])
-    Mnesia.create_table(Objects, [attributes: [:id, :lat, :lon]])
 
     pool_opts = [
       name: {:local, @pool_name},
@@ -37,6 +36,7 @@ defmodule Carmen.Zone.Store do
     supervise(children, strategy: :one_for_one, name: __MODULE__)
   end
 
+  def put_zone(shape), do: put_zone(UUID.uuid4(), shape)
   def put_zone(id, shape) do
     :poolboy.transaction(
       @pool_name,

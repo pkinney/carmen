@@ -17,20 +17,18 @@ defmodule Carmen.Zone.Worker do
   end
 
   def handle_call({:put_zone, id, shape}, _from, grid) do
-    resp = Mnesia.transaction(fn ->
+    {:atomic, _} = Mnesia.transaction(fn ->
       case get_zone_by_id(id) do
         nil -> nil
         old_shape -> delete_shape_from_grid(id, old_shape, grid)
       end
 
-      # IO.inspect(shape)
       Mnesia.write({Zone, id, shape})
       Mnesia.write({ZoneEnv, id, Envelope.from_geo(shape)})
       add_shape_to_grid(id, shape, grid)
-      id
     end)
 
-    {:reply, resp, grid}
+    {:reply, id, grid}
   end
 
   def handle_call({:get_zone, id}, _from, grid) do
@@ -47,8 +45,6 @@ defmodule Carmen.Zone.Worker do
       |> filter_zones_by_envelope_check(shape)
       |> filter_zones_by_shape(shape)
     end)
-
-    IO.inspect(res)
 
     {:reply, res, grid}
   end
@@ -67,7 +63,6 @@ defmodule Carmen.Zone.Worker do
 
   defp add_shape_to_cell(id, x, y) do
     hash = cell_hash(x, y)
-    IO.puts("Writing #{id} to #{hash}")
     case Mnesia.read({MapCell, hash}) do
       [{MapCell, _, objects}] ->
         Mnesia.write({MapCell, hash, objects ++ [id]})
@@ -77,7 +72,21 @@ defmodule Carmen.Zone.Worker do
   end
 
   defp delete_shape_from_grid(id, shape, grid) do
-    IO.inspect SpatialHash.hash_range(shape, grid)
+    [x_range, y_range] = SpatialHash.hash_range(shape, grid)
+    for x <- x_range do
+      for y <- y_range do
+        remove_shape_from_cell(id, x, y)
+      end
+    end
+  end
+
+  defp remove_shape_from_cell(id, x, y) do
+    hash = cell_hash(x, y)
+    case Mnesia.read({MapCell, hash}) do
+      [{MapCell, _, objects}] ->
+        Mnesia.write({MapCell, hash, objects -- [id]})
+      [] -> nil
+    end
   end
 
   defp get_zone_ids_in_range([x_range, y_range]) do
