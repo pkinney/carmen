@@ -1,7 +1,8 @@
-defmodule Carmen.ZoneStoreTest do
+defmodule Carmen.ObjectTest do
   use ExUnit.Case
-  doctest Carmen.Zone.Store
+  doctest Carmen.Object
 
+  alias Carmen.Object
   alias Carmen.Zone.Store
 
   @in_shape1 %Geo.Point{coordinates: {136.884723, 35.171848}}
@@ -66,36 +67,26 @@ defmodule Carmen.ZoneStoreTest do
       id2: Store.put_zone(@shape2) ]
   end
 
-  test "put and get shape", %{id1: id} do
-    assert Store.get_zone(id) == @shape1
+  test "adding a new object outside of a zone should not generate an event" do
+    assert Object.update(UUID.uuid4(), @in_concavity) == {[], []}
   end
 
-  test "update a shape", %{id1: id} do
-    Store.put_zone(id, @shape2)
-    assert Store.get_zone(id) == @shape2
+  test "adding a new object inside of a zone should generate an event", %{id1: id1} do
+    assert Object.update(UUID.uuid4(), @in_shape1) == {[id1], []}
   end
 
-  test "get a shape that doesn't exist" do
-    assert Store.get_zone(UUID.uuid4()) == nil
+  test "moving and object from one zone to another generates an event", %{id1: id1, id2: id2} do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    assert Object.update(id, @in_both) == {[id2], []}
+    assert Object.update(id, @in_shape1) == {[], [id2]}
+    id3 = Store.put_zone(@shape3)
+    assert Object.update(id, @in_shape3) == {[id3], [id1]}
   end
 
-  test "intersecting zones for a given point", %{id1: id1, id2: id2} do
-    assert Store.intersections(@in_shape1) == [id1]
-    assert Store.intersections(@in_both) |> Enum.sort == [id1, id2] |> Enum.sort
-  end
-
-  test "intersecting zones for a given polygon", %{id1: id1, id2: id2} do
-    assert Store.intersections(@triangle_in_both) |> Enum.sort == [id1, id2] |> Enum.sort
-  end
-
-  test "intersecting zones for a point inside concavity" do
-    assert Store.intersections(@in_concavity) == []
-  end
-
-  test "updating zone and grid", %{id1: id1, id2: id2} do
-    Store.put_zone(id1, @shape3)
-    assert Store.intersections(@in_both) == [id2]
-    assert Store.intersections(@in_shape1) == []
-    assert Store.intersections(@in_shape3) == [id1]
+  test "changing shape and object from one zone to another generates an event", %{id2: id2} do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    assert Object.update(id, @triangle_in_both) == {[id2], []}
   end
 end

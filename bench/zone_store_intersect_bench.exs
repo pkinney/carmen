@@ -1,13 +1,12 @@
-defmodule Carmen.ZoneStoreTest do
-  use ExUnit.Case
-  doctest Carmen.Zone.Store
-
-  alias Carmen.Zone.Store
+defmodule Carmen.Zone.StoreIntersectionBench do
+  use Benchfella
+  import Topo
 
   @in_shape1 %Geo.Point{coordinates: {136.884723, 35.171848}}
   @in_both %Geo.Point{coordinates: {136.884149, 35.172102}}
   @in_concavity %Geo.Point{coordinates: {136.884831, 35.172137}}
   @in_shape3 %Geo.Point{coordinates: {136.8844503, 35.172896}}
+  @outside_all %Geo.Point{coordinates: {136.886633, 35.173913}}
 
   @shape1 %Geo.Polygon{ coordinates: [
           [
@@ -58,44 +57,38 @@ defmodule Carmen.ZoneStoreTest do
       }
 
 
-  setup do
-    [Zone, ZoneEnv, MapCell] |>
-      Enum.map(&:mnesia.clear_table/1)
 
-    [ id1: Store.put_zone(@shape1),
-      id2: Store.put_zone(@shape2) ]
+  setup_all do
+    Application.ensure_all_started(:carmen)
+    {:ok, []}
   end
 
-  test "put and get shape", %{id1: id} do
-    assert Store.get_zone(id) == @shape1
+  before_each_bench _ do
+    [Zone, ZoneEnv, MapCell] |> Enum.map(&:mnesia.clear_table/1)
+    Carmen.Zone.Store.put_zone(@shape1)
+    Carmen.Zone.Store.put_zone(@shape2)
+    Carmen.Zone.Store.put_zone(@shape3)
+
+    {:ok, []}
   end
 
-  test "update a shape", %{id1: id} do
-    Store.put_zone(id, @shape2)
-    assert Store.get_zone(id) == @shape2
+  after_each_bench _ do
+    [Zone, ZoneEnv, MapCell] |> Enum.map(&:mnesia.clear_table/1)
   end
 
-  test "get a shape that doesn't exist" do
-    assert Store.get_zone(UUID.uuid4()) == nil
+  bench "Intersect no zones" do
+    [] = Carmen.Zone.Store.intersections(@outside_all)
   end
 
-  test "intersecting zones for a given point", %{id1: id1, id2: id2} do
-    assert Store.intersections(@in_shape1) == [id1]
-    assert Store.intersections(@in_both) |> Enum.sort == [id1, id2] |> Enum.sort
+  bench "Intersect envelope but no zones" do
+    Carmen.Zone.Store.intersections(@in_concavity)
   end
 
-  test "intersecting zones for a given polygon", %{id1: id1, id2: id2} do
-    assert Store.intersections(@triangle_in_both) |> Enum.sort == [id1, id2] |> Enum.sort
+  bench "Intersect 1 zone" do
+    Carmen.Zone.Store.intersections(@in_shape3)
   end
 
-  test "intersecting zones for a point inside concavity" do
-    assert Store.intersections(@in_concavity) == []
-  end
-
-  test "updating zone and grid", %{id1: id1, id2: id2} do
-    Store.put_zone(id1, @shape3)
-    assert Store.intersections(@in_both) == [id2]
-    assert Store.intersections(@in_shape1) == []
-    assert Store.intersections(@in_shape3) == [id1]
+  bench "Intersect 2 zones" do
+    Carmen.Zone.Store.intersections(@in_both)
   end
 end
