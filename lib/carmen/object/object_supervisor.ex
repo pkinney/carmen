@@ -10,7 +10,7 @@ defmodule Carmen.Object.Supervisor do
     Mnesia.create_schema([node()])
     Mnesia.start()
 
-    Mnesia.create_table(Zone, [attributes: [:id, :shape, :in_zones]])
+    Mnesia.create_table(Object, [attributes: [:id, :shape, :in_zones]])
 
     children = [
       worker(Carmen.Object.Worker, [], restart: :temporary)

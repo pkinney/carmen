@@ -89,4 +89,17 @@ defmodule Carmen.ObjectTest do
     Object.update(id, @in_shape1)
     assert Object.update(id, @triangle_in_both) == {[id2], []}
   end
+
+  test "get current relationship between object and shape", %{id1: id1, id2: id2} do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+
+    assert Object.intersecting?(id, id1)
+    refute Object.intersecting?(id, id2)
+  end
+
+  test "return false for relationship between unknown object and shape", %{id1: id1, id2: id2} do
+    id = UUID.uuid4()
+    refute Object.intersecting?(id, id1)
+  end
 end

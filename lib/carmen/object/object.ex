@@ -6,4 +6,11 @@ defmodule Carmen.Object do
     end
     GenServer.call({:via, :swarm, id}, {:update, shape})
   end
+
+  def intersecting?(id, zone_id) do
+    case Swarm.whereis_name(id) do
+      :undefined -> false
+      _ -> GenServer.call({:via, :swarm, id}, {:intersecting?, zone_id})
+    end
+  end
 end
