@@ -6,7 +6,7 @@ defmodule Carmen do
 
     children = [
       supervisor(Carmen.Redis.Pool, [[host: "localhost", port: 6379]]),
-      supervisor(Carmen.Zone.Store, [[{-180, 180, 0.001}, {-90, 90, 0.001}]]),
+      supervisor(Carmen.Zone.Pool, [[{-180, 180, 0.001}, {-90, 90, 0.001}]]),
       supervisor(Carmen.Object.Supervisor, [])
     ]
 

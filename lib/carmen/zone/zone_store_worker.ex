@@ -32,19 +32,18 @@ defmodule Carmen.Zone.Worker do
   end
 
   def handle_call({:get_zone, id}, _from, grid) do
-    case Mnesia.transaction(fn -> Mnesia.read({Zone, id}) end) do
-      {:atomic, [{Zone, ^id, shape}]} -> {:reply, shape, grid}
-      {:atomic, []} -> {:reply, nil, grid}
+    case Mnesia.dirty_read({Zone, id}) do
+      [{Zone, ^id, shape}] -> {:reply, shape, grid}
+      [] -> {:reply, nil, grid}
     end
   end
 
   def handle_call({:intersections, shape}, _from, grid) do
-    {:atomic, res} = Mnesia.transaction(fn ->
+    res =
       SpatialHash.hash_range(shape, grid)
       |> get_zone_ids_in_range
       |> filter_zones_by_envelope_check(shape)
       |> filter_zones_by_shape(shape)
-    end)
 
     {:reply, res, grid}
   end
@@ -100,21 +99,21 @@ defmodule Carmen.Zone.Worker do
   end
 
   defp get_shapes_in_cell(x, y) do
-    case Mnesia.read({MapCell, cell_hash(x, y)}) do
+    case Mnesia.dirty_read({MapCell, cell_hash(x, y)}) do
       [{MapCell, _, objects}] -> objects
       [] -> []
     end
   end
 
   defp get_zone_by_id(id) do
-    case Mnesia.read({Zone, id}) do
+    case Mnesia.dirty_read({Zone, id}) do
       [{Zone, _, zone}] -> zone
       [] -> nil
     end
   end
 
   defp get_zone_envelope_by_id(id) do
-    case Mnesia.read({ZoneEnv, id}) do
+    case Mnesia.dirty_read({ZoneEnv, id}) do
       [{ZoneEnv, _, env}] -> env
       [] -> nil
     end

@@ -13,17 +13,21 @@ defmodule Carmen.Object.Worker do
 
   def init(opts) do
     # TODO: load state from store
-    {:ok, []}
+    {:ok, {nil, []}}
   end
 
-  def handle_call({:update, shape}, _from, inters) do
+  def handle_call({:update, shape}, _from, {_, inters}) do
     new_inters = Carmen.Zone.Store.intersections(shape)
     #TODO: if changed, update Mnesia
-    {:reply, {new_inters -- inters, inters -- new_inters}, new_inters}
+    {:reply, {new_inters -- inters, inters -- new_inters}, {shape, new_inters}}
   end
 
-  def handle_call({:intersecting?, zone_id}, _from, inters) do
-    {:reply, Enum.member?(inters, zone_id), inters}
+  def handle_call({:intersecting?, zone_id}, _from, {shape, inters}) do
+    {:reply, Enum.member?(inters, zone_id), {shape, inters}}
+  end
+
+  def handle_call({:intersecting?, zone_id, true}, _from, {shape, inters}) do
+    {:reply, Carmen.Zone.Store.intersecting?(zone_id, shape), {shape, inters}}
   end
 
   # called when a handoff has been initiated due to changes

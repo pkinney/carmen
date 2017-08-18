@@ -42,24 +42,47 @@ defmodule BigMapExample do
   end
 
   def run(env, num_vehicles) do
-    vehicles = Enum.map(0..num_vehicles, fn _ -> UUID.uuid4() end)
+    vehicles = Enum.map(1..num_vehicles, fn _ -> UUID.uuid4() end)
 
     vehicles
     |> Enum.map(fn vehicle ->
         Task.async(fn ->
-          :timer.sleep(:rand.uniform(1000)+1)
-          Enum.map(0..1000, fn _ ->
+          :timer.sleep(:rand.uniform(1000) + 1)
+          %{coordinates: {x0, y0}} = random_point(env)
+          %{coordinates: {x1, y1}} = random_point(env)
+          steps = 300
+
+          d_x = 0.0001 * (x1 - x0) / abs(x1 - x0) # ~10m/s
+          d_y = 0.0001 * (y1 - y0) / abs(y1 - y0)
+
+          Enum.map(1..steps, fn i ->
             GenServer.cast(:meter, {:tap, :in})
-            {time, _} = :timer.tc(fn -> Carmen.Object.update(vehicle, random_point(env)) end)
+            Task.async(fn ->
+              point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
+              {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(vehicle, point) end)
 
-            GenServer.cast(:meter, {:tap, :out})
+              case entered do
+                [] -> nil
+                _ -> GenServer.cast(:meter, {:tap, :enter})
+              end
 
-            sleep_time = Enum.max([1000 - time/1000, 1]) |> round
-            :timer.sleep(sleep_time)
+              case left do
+                [] -> nil
+                _ -> GenServer.cast(:meter, {:tap, :leave})
+              end
+              GenServer.cast(:meter, {:tap, :out})
+              GenServer.cast(:meter, {:measure, time})
+            end)
+
+            # sleep_time = Enum.max([1000 - time/1000, 1]) |> round
+            # :timer.sleep(sleep_time)
+            :timer.sleep(1000)
           end)
         end)
       end)
     |> Enum.map(&(Task.await(&1, :infinity)))
+
+    :ok
   end
 
   defp random_between(a, b) when a > b, do: :rand.uniform() * (a - b) + b
@@ -89,41 +112,42 @@ defmodule Meter do
   def init(opts) do
     Process.send_after(self, :print_stats, @interval)
     {:ok, %{
-      in: {[0], 0},
-      out: {[0], 0},
+      in: [0],
+      out: [0],
+      enter: [0],
+      leave: [0],
       proc_time: []
     }}
   end
 
   def handle_cast({:tap, field}, state) do
-    {[cur | rest], last_time} = state[field]
-    {d, s, _} = :os.timestamp()
-    this_time = d*1000000+s
-    new_field = case this_time do
-      ^last_time ->
-        {[cur + 1 | rest], last_time}
-      _ ->
-        {[1, cur | (rest |> Enum.take(10))], this_time}
-    end
-    {:noreply, state |> Map.put(field, new_field)}
+    [cur | rest] = state[field]
+    {:noreply, state |> Map.put(field, [cur + 1 | rest])}
+  end
+
+  def handle_cast({:measure, time}, %{proc_time: times} = state) do
+    new_times =  [time] ++ Enum.take(times, 99)
+    {:noreply, state |> Map.put(:proc_time, new_times)}
   end
 
   def handle_info(:print_stats, state) do
-    {[_ | recent_in], _} = state.in
-    {[_ | recent_out], _} = state.out
+    in_rate = state.in |> calc_average
+    out_rate = state.out |> calc_average
+    enter_rate = state.enter |> calc_average
+    leave_rate = state.leave |> calc_average
+    ave_time = state.proc_time |> calc_average
 
-    in_rate = case recent_in do
-      [] -> 0
-      _ -> Enum.sum(recent_in) * 1.0 / length(recent_in)
-    end
-
-    out_rate = case recent_out do
-      [] -> 0
-      _ -> Enum.sum(recent_out) * 1.0 / length(recent_out)
-    end
-    IO.puts("In: #{in_rate} Out: #{out_rate}")
+    IO.puts("In: #{in_rate}/s | Out: #{out_rate}/s | Time: #{ave_time}us -> Enter: #{enter_rate}/s | Leave: #{leave_rate}/s")
     Process.send_after(self, :print_stats, @interval)
 
-    {:noreply, state}
+    new_in = [0] ++ state.in |> Enum.take(3)
+    new_out = [0] ++ state.out |> Enum.take(3)
+    new_enter = [0] ++ state.enter |> Enum.take(3)
+    new_leave = [0] ++ state.leave |> Enum.take(3)
+
+    {:noreply, %{in: new_in, out: new_out, enter: new_enter, leave: new_leave, proc_time: state.proc_time}}
   end
+
+  defp calc_average([]), do: 0
+  defp calc_average(values), do: Enum.sum(values) * 1.0 / length(values) |> round
 end
