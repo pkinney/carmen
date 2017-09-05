@@ -1,10 +1,11 @@
 defmodule BigMapExample do
   def do_all(num_vehicles) do
+    clear_all()
+    env = load()
+
     Meter.start_link()
 
-    clear_all()
-    load()
-    |> run(num_vehicles)
+    run(env, num_vehicles)
   end
 
   def load() do
@@ -126,7 +127,7 @@ defmodule Meter do
   end
 
   def handle_cast({:measure, time}, %{proc_time: times} = state) do
-    new_times =  [time] ++ Enum.take(times, 99)
+    new_times =  [time] ++ Enum.take(times, 9)
     {:noreply, state |> Map.put(:proc_time, new_times)}
   end
 

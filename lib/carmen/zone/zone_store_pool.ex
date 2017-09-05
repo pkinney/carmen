@@ -3,7 +3,7 @@ defmodule Carmen.Zone.Pool do
   alias :mnesia, as: Mnesia
 
   @pool_name :zone_worker_pool
-  @pool_size 100
+  @pool_size 200
   @pool_max_overflow 0
 
   def start_link(opts \\ []) do
