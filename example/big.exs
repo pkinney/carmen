@@ -19,11 +19,7 @@ defmodule BigMapExample do
 
     IO.puts("Adding #{length(features)} features...")
 
-    features
-    |> Enum.with_index
-    |> Enum.map(fn {feature, i} ->
-      Carmen.Zone.Store.put_zone(feature)
-    end)
+    Enum.map(features, &Carmen.Zone.Store.put_zone(&1))
 
     IO.puts("Features added.")
 
@@ -110,8 +106,8 @@ defmodule Meter do
   ##############################
   # Server Callbacks
 
-  def init(opts) do
-    Process.send_after(self, :print_stats, @interval)
+  def init(_opts) do
+    Process.send_after(self(), :print_stats, @interval)
     {:ok, %{
       in: [0],
       out: [0],
@@ -139,7 +135,7 @@ defmodule Meter do
     ave_time = state.proc_time |> calc_average
 
     IO.puts("In: #{in_rate}/s | Out: #{out_rate}/s | Time: #{ave_time}us -> Enter: #{enter_rate}/s | Leave: #{leave_rate}/s")
-    Process.send_after(self, :print_stats, @interval)
+    Process.send_after(self(), :print_stats, @interval)
 
     new_in = [0] ++ state.in |> Enum.take(3)
     new_out = [0] ++ state.out |> Enum.take(3)

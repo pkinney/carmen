@@ -6,7 +6,7 @@ defmodule Carmen.Object.Supervisor do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init(opts) do
+  def init(_opts) do
     Mnesia.create_schema([node()])
     Mnesia.start()
 
