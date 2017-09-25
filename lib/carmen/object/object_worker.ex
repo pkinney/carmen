@@ -1,6 +1,8 @@
 defmodule Carmen.Object.Worker do
   use GenServer
 
+  @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
+
   ##############################
   # Client API
 
@@ -11,15 +13,21 @@ defmodule Carmen.Object.Worker do
   ##############################
   # Server Callbacks
 
-  def init(_opts) do
-    # TODO: load state from store
-    {:ok, {nil, []}}
+  def init(id) do
+    {_, _} = state = @interface.object_state(id)
+    {:ok, state}
   end
 
-  def handle_call({:update, shape}, _from, {_, inters}) do
+  def handle_call({:update, id, shape}, _from, {_, inters}) do
     new_inters = Carmen.Zone.Store.intersections(shape)
-    #TODO: if changed, update Mnesia
-    {:reply, {new_inters -- inters, inters -- new_inters}, {shape, new_inters}}
+
+    enters = new_inters -- inters
+    exits = inters -- new_inters
+
+    Enum.each(enters, &@interface.enter(id, &1))
+    Enum.each(exits, &@interface.exit(id, &1))
+
+    {:reply, {enters, exits}, {shape, new_inters}}
   end
 
   def handle_call({:intersecting?, zone_id}, _from, {shape, inters}) do
