@@ -11,7 +11,7 @@ defmodule Carmen.Object.Worker do
   ##############################
   # Server Callbacks
 
-  def init(opts) do
+  def init(_opts) do
     # TODO: load state from store
     {:ok, {nil, []}}
   end
@@ -24,10 +24,6 @@ defmodule Carmen.Object.Worker do
 
   def handle_call({:intersecting?, zone_id}, _from, {shape, inters}) do
     {:reply, Enum.member?(inters, zone_id), {shape, inters}}
-  end
-
-  def handle_call({:intersecting?, zone_id, true}, _from, {shape, inters}) do
-    {:reply, Carmen.Zone.Store.intersecting?(zone_id, shape), {shape, inters}}
   end
 
   # called when a handoff has been initiated due to changes
