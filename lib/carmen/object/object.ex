@@ -1,16 +1,37 @@
 defmodule Carmen.Object do
   def update(id, shape) do
-    case Swarm.whereis_name(id) do
-      :undefined -> Swarm.register_name(id, Carmen.Object.Supervisor, :register, [id])
-      _ -> nil
-    end
-    GenServer.call({:via, :swarm, id}, {:update, shape})
+    name = via_tuple(id)
+
+    pid =
+      name
+      |> Swarm.whereis_name()
+      |> case do
+        :undefined ->
+          Swarm.register_name(name, Carmen.Object.Supervisor, :register, [id])
+        pid ->
+          {:ok, pid}
+      end
+      |> case do
+        {:ok, pid} -> pid
+        {:error, {:already_registered, pid}} -> pid
+      end
+
+    GenServer.call(pid, {:update, id, shape})
   end
 
   def intersecting?(id, zone_id) do
-    case Swarm.whereis_name(id) do
-      :undefined -> false
-      _ -> GenServer.call({:via, :swarm, id}, {:intersecting?, zone_id})
+    id
+    |> via_tuple()
+    |> Swarm.whereis_name()
+    |> case do
+      :undefined ->
+        false
+      pid ->
+        GenServer.call(pid, {:intersecting?, zone_id})
     end
+  end
+
+  def via_tuple(id) do
+    {:via, :swarm, {:carmen, id}}
   end
 end
