@@ -20,7 +20,6 @@ defmodule Carmen.Mixfile do
       extra_applications: [
         :logger,
         :poolboy,
-        :redix,
         :geo,
         :uuid,
         :topo]
@@ -31,7 +30,6 @@ defmodule Carmen.Mixfile do
   defp deps do
     [
       {:poolboy, "~> 1.5"},
-      {:redix, "~> 0.6"},
       {:geo, "~> 1.0"},
       {:uuid, "~> 1.1"},
       {:topo, "~> 0.1.2"},

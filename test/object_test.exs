@@ -98,7 +98,7 @@ defmodule Carmen.ObjectTest do
     refute Object.intersecting?(id, id2)
   end
 
-  test "return false for relationship between unknown object and shape", %{id1: id1, id2: id2} do
+  test "return false for relationship between unknown object and shape", %{id1: id1, id2: _} do
     id = UUID.uuid4()
     refute Object.intersecting?(id, id1)
   end

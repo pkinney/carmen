@@ -11,7 +11,6 @@
   "plug": {:hex, :plug, "1.4.3", "236d77ce7bf3e3a2668dc0d32a9b6f1f9b1f05361019946aae49874904be4aed", [:mix], [{:cowboy, "~> 1.0.1 or ~> 1.1", [hex: :cowboy, optional: true]}, {:mime, "~> 1.0", [hex: :mime, optional: false]}]},
   "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], []},
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
-  "redix": {:hex, :redix, "0.6.1", "20986b0e02f02b13e6f53c79a1ae70aa83147488c408f40275ec261f5bb0a6d0", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}]},
   "seg_seg": {:hex, :seg_seg, "0.0.1", "3bf890734bfc4d69070b259f041263368ae9d2a003ed6e66de6b54523d970db1", [:mix], [{:vector, "~> 0.2.1", [hex: :vector, optional: false]}]},
   "spatial_hash": {:hex, :spatial_hash, "0.1.4", "9fb644efd50c21c3447696ac553e2c4c2a0e9bef8c7623e01bff5c66117a557f", [:mix], [{:envelope, "~> 0.4", [hex: :envelope, optional: false]}]},
   "swarm": {:hex, :swarm, "3.0.5", "c54ead44ca5f879959899f325f0e6b904e1a219faecb24ca4e55aad1fe38fecc", [:mix], [{:gen_state_machine, "~> 2.0", [hex: :gen_state_machine, optional: false]}, {:libring, "~> 1.0", [hex: :libring, optional: false]}]},
