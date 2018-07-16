@@ -1,8 +1,6 @@
 defmodule Carmen.Zone.StoreIntersectionBench do
   use Benchfella
-  import Topo
 
-  @in_shape1 %Geo.Point{coordinates: {136.884723, 35.171848}}
   @in_both %Geo.Point{coordinates: {136.884149, 35.172102}}
   @in_concavity %Geo.Point{coordinates: {136.884831, 35.172137}}
   @in_shape3 %Geo.Point{coordinates: {136.8844503, 35.172896}}
@@ -90,5 +88,9 @@ defmodule Carmen.Zone.StoreIntersectionBench do
 
   bench "Intersect 2 zones" do
     Carmen.Zone.Store.intersections(@in_both)
+  end
+
+  bench "Triangle intersects 2 zones" do
+    Carmen.Zone.Store.intersections(@triangle_in_both)
   end
 end

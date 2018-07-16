@@ -1,22 +1,20 @@
 defmodule Carmen.Zone.Pool do
   use Supervisor
-  alias :mnesia, as: Mnesia
 
   @pool_name :zone_worker_pool
   @pool_size 200
   @pool_max_overflow 0
+  @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts)
   end
 
   def init(opts) do
-    Mnesia.create_schema([node()])
-    Mnesia.start()
-
-    Mnesia.create_table(Zone, [attributes: [:id, :shape]])
-    Mnesia.create_table(ZoneEnv, [attributes: [:id, :envelope]])
-    Mnesia.create_table(MapCell, [attributes: [:hash, :objects]])
+    :ok = @interface.start_storage()
+    :mnesia.create_table(Zone, [attributes: [:id, :shape]])
+    :mnesia.create_table(ZoneEnv, [attributes: [:id, :envelope]])
+    :mnesia.create_table(MapCell, [attributes: [:hash, :objects]])
 
     pool_opts = [
       name: {:local, @pool_name},

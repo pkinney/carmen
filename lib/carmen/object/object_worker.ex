@@ -3,76 +3,38 @@ defmodule Carmen.Object.Worker do
 
   @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
 
-  ##############################
-  # Client API
-
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link({id, opts}) do
+    GenServer.start_link(__MODULE__, id, opts)
   end
-
-  ##############################
-  # Server Callbacks
 
   def init(id) do
-    {_, _} = state = @interface.object_state(id)
-    {:ok, state}
+    Process.send(self(), {:initialize, id}, [])
+    {:ok, nil}
   end
 
-  def handle_call({:update, id, shape}, _from, {_, inters}) do
+  def handle_info({:initialize, id}, _state) do
+    {_shape, _inters, _meta} = state = @interface.object_state(id)
+    {:noreply, state}
+  end
+
+  def handle_info(msg, state), do: @interface.handle_msg(:info, msg, state)
+
+  def handle_call({:update, id, shape}, _from, {_, inters, meta}) do
     new_inters = Carmen.Zone.Store.intersections(shape)
 
     enters = new_inters -- inters
     exits = inters -- new_inters
 
-    Enum.each(enters, &@interface.enter(id, &1))
-    Enum.each(exits, &@interface.exit(id, &1))
+    Enum.each(enters, &(:ok = @interface.enter(id, &1, meta)))
+    Enum.each(exits, &(:ok = @interface.exit(id, &1, meta)))
 
-    {:reply, {enters, exits}, {shape, new_inters}}
-  end
-
-  def handle_call({:intersecting?, zone_id}, _from, {shape, inters}) do
-    {:reply, Enum.member?(inters, zone_id), {shape, inters}}
+    {:reply, {enters, exits}, {shape, new_inters, meta}}
   end
 
-  # called when a handoff has been initiated due to changes
-  # in cluster topology, valid response values are:
-  #
-  #   - `:restart`, to simply restart the process on the new node
-  #   - `{:resume, state}`, to hand off some state to the new process
-  #   - `:ignore`, to leave the process running on it's current node
-  #
-  def handle_call({:swarm, :begin_handoff}, _from, {name, delay}) do
-    {:reply, {:resume, delay}, {name, delay}}
+  def handle_call({:intersecting?, zone_id}, _from, {_shape, inters, _meta} = state) do
+    {:reply, Enum.member?(inters, zone_id), state}
   end
 
-  # called after the process has been restarted on it's new node,
-  # and the old process's state is being handed off. This is only
-  # sent if the return to `begin_handoff` was `{:resume, state}`.
-  # **NOTE**: This is called *after* the process is successfully started,
-  # so make sure to design your processes around this caveat if you
-  # wish to hand off state like this.
-  def handle_cast({:swarm, :end_handoff, delay}, {name, _}) do
-    {:noreply, {name, delay}}
-  end
-
-  # called when a network split is healed and the local process
-  # should continue running, but a duplicate process on the other
-  # side of the split is handing off it's state to us. You can choose
-  # to ignore the handoff state, or apply your own conflict resolution
-  # strategy
-  def handle_cast({:swarm, :resolve_conflict, _delay}, state) do
-    {:noreply, state}
-  end
-
-  def handle_info(:timeout, {name, delay}) do
-    IO.puts "#{inspect name} says hi!"
-    Process.send_after(self(), :timeout, delay)
-    {:noreply, {name, delay}}
-  end
-  # this message is sent when this process should die
-  # because it's being moved, use this as an opportunity
-  # to clean up
-  def handle_info({:swarm, :die}, state) do
-    {:stop, :shutdown, state}
-  end
+  def handle_call(msg, state), do: @interface.handle_msg(:call, msg, state)
+  def handle_cast(msg, state), do: @interface.handle_msg(:cast, msg, state)
 end

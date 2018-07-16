@@ -27,7 +27,6 @@ defmodule Carmen.Mixfile do
       {:geo, "~> 1.0"},
       {:poolboy, "~> 1.5"},
       {:spatial_hash, "~> 0.1.2"},
-      {:swarm, "~> 3.0"},
       {:topo, "~> 0.1.2"},
       {:uuid, "~> 1.1"},
 

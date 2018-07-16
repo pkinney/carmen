@@ -1,6 +1,5 @@
 defmodule Carmen.Zone.StoreBench do
   use Benchfella
-  import Topo
 
   setup_all do
     Application.ensure_all_started(:carmen)
