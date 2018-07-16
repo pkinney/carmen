@@ -1,11 +1,21 @@
-defmodule BigMapExample do
-  def do_all(num_vehicles) do
+defmodule Mix.Tasks.Carmen.Demo do
+  use Mix.Task
+
+  def run([objects]) do
+    Application.ensure_all_started(:carmen)
+    Carmen.Demo.do_all(String.to_integer(objects))
+  end
+  def run(_), do: Mix.shell.error("Please provide an integer number of moving objects you wish to demo")
+end
+
+defmodule Carmen.Demo do
+  def do_all(num_objects) do
     clear_all()
     env = load()
 
     Meter.start_link()
 
-    run(env, num_vehicles)
+    run(env, num_objects)
   end
 
   def load() do
@@ -38,11 +48,11 @@ defmodule BigMapExample do
       random_between(env.max_y, env.min_y) }}
   end
 
-  def run(env, num_vehicles) do
-    vehicles = Enum.map(1..num_vehicles, fn _ -> UUID.uuid4() end)
+  def run(env, num_objects) do
+    objects = Enum.map(1..num_objects, fn _ -> UUID.uuid4() end)
 
-    vehicles
-    |> Enum.map(fn vehicle ->
+    objects
+    |> Enum.map(fn object ->
         Task.async(fn ->
           :timer.sleep(:rand.uniform(1000) + 1)
           %{coordinates: {x0, y0}} = random_point(env)
@@ -56,7 +66,7 @@ defmodule BigMapExample do
             GenServer.cast(:meter, {:tap, :in})
             Task.async(fn ->
               point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
-              {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(vehicle, point) end)
+              {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(object, point) end)
 
               case entered do
                 [] -> nil

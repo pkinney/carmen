@@ -1,6 +1,16 @@
 # Carmen
 
-**TODO: Add description**
+Carmen is a streaming database for location events. As an object moves through zones
+(geofences) events are emitted for that object. The object state is maintained in a
+process so it is very performant for the case where frequent messages are received
+for each object.
+
+It is highly configurable. Out of the box it assumes that messages are ordered and partitioned
+by `id` before reaching Carmen (the messages for an object will go to the same node) but
+by configuring a process registry such as Swarm it can handle mixed messages (messages for any
+object can arrive at any node).
+
+The demo can be ran via `mix carmen.demo 5000` where `5000` is the number of moving objects.
 
 ## Installation
 
