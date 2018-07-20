@@ -118,6 +118,19 @@ defmodule Carmen.ObjectTest do
     assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{name: ^id}} = data
   end
 
+  test "should set initial state directly without retrieving from long term storage", _ do
+    id = UUID.uuid4()
+    zone_id = UUID.uuid4()
+    :ok = Object.put_state(id, {@in_shape1, [zone_id], %{direct: "meta"}})
+    pid = Carmen.Example.Interface.lookup(id)
+    {_state, data} = :sys.get_state(pid)
+    assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{direct: "meta"}} = data
+    # ensure that the lazy state load doesn't still happen and reset our state
+    Process.sleep(15)
+    {_state, ^data} = :sys.get_state(pid)
+    assert {[], [_shape1_id]} = Object.update(id, @in_shape3)
+  end
+
   test "should update the process state on every message", _ do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)

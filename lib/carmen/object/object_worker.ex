@@ -24,8 +24,9 @@ defmodule Carmen.Object.Worker do
     end
   end
 
-  def handle_event({:call, _from}, {:put_state, id, {shape, inters, meta}}, _state, _data) do
-    {:next_state, :running, %Data{id: id, shape: shape, inters: inters, meta: meta}}
+  def handle_event({:call, from}, {:put_state, {id, {shape, inters, meta}}}, _state, _data) do
+    actions = [{:reply, from, :ok}]
+    {:next_state, :running, %Data{id: id, shape: shape, inters: inters, meta: meta}, actions}
   end
 
   def handle_event({:call, _from}, _, :starting, _data) do

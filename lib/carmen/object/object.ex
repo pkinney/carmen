@@ -4,7 +4,7 @@ defmodule Carmen.Object do
   def update(id, shape), do: update(id, shape, :omitted)
   def update(id, shape, meta), do: safe_call(id, {:update, id, shape, meta})
 
-  def put_state(id, state), do: safe_call(id, {:put_state, id, state})
+  def put_state(id, state), do: safe_call(id, {:put_state, {id, state}})
 
   def get_shape(id), do: safe_call(id, :get_shape)
 
