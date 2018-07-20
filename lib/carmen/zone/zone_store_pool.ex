@@ -1,4 +1,5 @@
 defmodule Carmen.Zone.Pool do
+  @moduledoc false
   use Supervisor
 
   @pool_name :zone_worker_pool

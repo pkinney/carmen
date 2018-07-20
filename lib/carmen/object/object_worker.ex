@@ -1,9 +1,13 @@
 defmodule Carmen.Object.Worker do
+  @moduledoc false
   use GenStateMachine
 
   @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
 
-  defmodule(Data, do: defstruct([:id, :shape, inters: [], meta: %{}, processed: 0]))
+  defmodule Data do
+    @moduledoc false
+    defstruct [:id, :shape, inters: [], meta: %{}, processed: 0]
+  end
 
   def start_link({id, opts}) do
     GenStateMachine.start_link(__MODULE__, id, opts)
@@ -54,7 +58,7 @@ defmodule Carmen.Object.Worker do
 
           actions = [
             {:reply, from, {enters, exits}},
-            {:state_timeout, @interface.die_after_ms(), :shutdown},
+            {:state_timeout, @interface.die_after_ms(), :shutdown}
           ]
 
           {:keep_state, data, actions}

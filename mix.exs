@@ -31,6 +31,7 @@ defmodule Carmen.Mixfile do
       {:topo, "~> 0.1.2"},
       {:uuid, "~> 1.1"},
       {:benchfella, "~> 0.3.5", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: :dev},
       {:poison, "~> 2.0", only: [:test, :dev]}
     ]
   end

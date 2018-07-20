@@ -1,16 +1,11 @@
 defmodule Carmen.Zone.Worker do
+  @moduledoc false
   use GenServer
   alias :mnesia, as: Mnesia
-
-  ##############################
-  # Client API
 
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts)
   end
-
-  ##############################
-  # Server Callbacks
 
   def init(opts) do
     {:ok, opts}

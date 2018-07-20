@@ -1,6 +1,7 @@
 defmodule Carmen.Zone.Store do
   @pool_name :zone_worker_pool
 
+  @doc false
   def put_zone(shape), do: put_zone(UUID.uuid4(), shape)
 
   def put_zone(id, shape) do

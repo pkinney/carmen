@@ -10,6 +10,8 @@ defmodule Mix.Tasks.Carmen.Demo do
 end
 
 defmodule Carmen.Demo do
+  @moduledoc false
+
   def do_all(num_objects) do
     clear_all()
     env = load()
@@ -102,6 +104,7 @@ defmodule Carmen.Demo do
 end
 
 defmodule Meter do
+  @moduledoc false
   use GenServer
 
   @interval 1000
