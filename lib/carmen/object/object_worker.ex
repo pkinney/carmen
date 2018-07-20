@@ -105,14 +105,14 @@ defmodule Carmen.Object.Worker do
     {:next_state, :running, %{data | processed: 0}}
   end
 
-  def handle_event(:state_timeout, :shutdown, _state, _data) do
-    :stop
+  def handle_event(:state_timeout, :shutdown, _state, data) do
+    shutdown(data)
   end
 
   # either I'm missing something obvious or there's a bug in gen_statem because timeouts should show
   # up as a gen_statem event and be caught by the function above but occasionally this :info shows up
-  def handle_event(:info, {:timeout, _, :shutdown}, _state, _data) do
-    :stop
+  def handle_event(:info, {:timeout, _, :shutdown}, _state, data) do
+    shutdown(data)
   end
 
   def handle_event(_, _, _, :not_found) do
@@ -122,4 +122,9 @@ defmodule Carmen.Object.Worker do
   def handle_event({:call, from}, msg, _state, data), do: @interface.handle_msg({:call, from}, msg, data)
   def handle_event(:cast, msg, _state, data), do: @interface.handle_msg(:cast, msg, data)
   def handle_event(:info, msg, _state, data), do: @interface.handle_msg(:info, msg, data)
+
+  defp shutdown(%Data{id: id, shape: shape, inters: inters, meta: meta}) do
+    :ok = @interface.save_object_state(id, shape, inters, meta)
+    :stop
+  end
 end

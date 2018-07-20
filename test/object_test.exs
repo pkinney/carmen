@@ -159,6 +159,16 @@ defmodule Carmen.ObjectTest do
     assert [{_id, _shape, _inters, _meta}] = :ets.lookup(:carmen_tests, id)
   end
 
+  test "should save the object's state to long term storage on shutdown", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    pid = Carmen.Example.Interface.lookup(id)
+    assert [] = :ets.lookup(:carmen_tests, id)
+    send(pid, {:timeout, nil, :shutdown})
+    Process.sleep(5)
+    assert [{_id, _shape, _inters, _meta}] = :ets.lookup(:carmen_tests, id)
+  end
+
   test "should shut down the process when :die_after_ms expires", _ do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)
