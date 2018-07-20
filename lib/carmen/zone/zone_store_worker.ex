@@ -17,16 +17,17 @@ defmodule Carmen.Zone.Worker do
   end
 
   def handle_call({:put_zone, id, shape}, _from, grid) do
-    {:atomic, _} = Mnesia.transaction(fn ->
-      case get_zone_by_id(id) do
-        nil -> nil
-        old_shape -> delete_shape_from_grid(id, old_shape, grid)
-      end
+    {:atomic, _} =
+      Mnesia.transaction(fn ->
+        case get_zone_by_id(id) do
+          nil -> nil
+          old_shape -> delete_shape_from_grid(id, old_shape, grid)
+        end
 
-      Mnesia.write({Zone, id, shape})
-      Mnesia.write({ZoneEnv, id, Envelope.from_geo(shape)})
-      add_shape_to_grid(id, shape, grid)
-    end)
+        Mnesia.write({Zone, id, shape})
+        Mnesia.write({ZoneEnv, id, Envelope.from_geo(shape)})
+        add_shape_to_grid(id, shape, grid)
+      end)
 
     {:reply, id, grid}
   end
@@ -53,6 +54,7 @@ defmodule Carmen.Zone.Worker do
 
   defp add_shape_to_grid(id, shape, grid) do
     [x_range, y_range] = SpatialHash.hash_range(shape, grid)
+
     for x <- x_range do
       for y <- y_range do
         add_shape_to_cell(id, x, y)
@@ -62,9 +64,11 @@ defmodule Carmen.Zone.Worker do
 
   defp add_shape_to_cell(id, x, y) do
     hash = cell_hash(x, y)
+
     case Mnesia.read({MapCell, hash}) do
       [{MapCell, _, objects}] ->
         Mnesia.write({MapCell, hash, objects ++ [id]})
+
       [] ->
         Mnesia.write({MapCell, hash, [id]})
     end
@@ -72,6 +76,7 @@ defmodule Carmen.Zone.Worker do
 
   defp delete_shape_from_grid(id, shape, grid) do
     [x_range, y_range] = SpatialHash.hash_range(shape, grid)
+
     for x <- x_range do
       for y <- y_range do
         remove_shape_from_cell(id, x, y)
@@ -81,20 +86,25 @@ defmodule Carmen.Zone.Worker do
 
   defp remove_shape_from_cell(id, x, y) do
     hash = cell_hash(x, y)
+
     case Mnesia.read({MapCell, hash}) do
       [{MapCell, _, objects}] ->
         Mnesia.write({MapCell, hash, objects -- [id]})
-      [] -> nil
+
+      [] ->
+        nil
     end
   end
 
   defp get_zone_ids_in_range([x_range, y_range]) do
-    Enum.reduce(x_range, [], fn (x, acc1) ->
-      column = Enum.reduce(y_range, [], fn (y, acc2) ->
-        (acc2 ++ get_shapes_in_cell(x, y))
-        |> Enum.uniq
-      end)
-      (acc1 ++ column) |> Enum.uniq
+    Enum.reduce(x_range, [], fn x, acc1 ->
+      column =
+        Enum.reduce(y_range, [], fn y, acc2 ->
+          (acc2 ++ get_shapes_in_cell(x, y))
+          |> Enum.uniq()
+        end)
+
+      (acc1 ++ column) |> Enum.uniq()
     end)
   end
 

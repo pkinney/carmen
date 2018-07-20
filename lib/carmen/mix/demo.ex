@@ -5,7 +5,8 @@ defmodule Mix.Tasks.Carmen.Demo do
     Application.ensure_all_started(:carmen)
     Carmen.Demo.do_all(String.to_integer(objects))
   end
-  def run(_), do: Mix.shell.error("Please provide an integer number of moving objects you wish to demo")
+
+  def run(_), do: Mix.shell().error("Please provide an integer number of moving objects you wish to demo")
 end
 
 defmodule Carmen.Demo do
@@ -20,11 +21,11 @@ defmodule Carmen.Demo do
 
   def load() do
     features =
-      Path.join([ "bench", "shapes", "blocks_nyc.json" ])
-      |> File.read!
-      |> Poison.decode!
+      Path.join(["bench", "shapes", "blocks_nyc.json"])
+      |> File.read!()
+      |> Poison.decode!()
       |> Map.fetch!("features")
-      |> Enum.map(&(&1["geometry"]))
+      |> Enum.map(& &1["geometry"])
       |> Enum.map(&Geo.JSON.decode/1)
 
     IO.puts("Adding #{length(features)} features...")
@@ -39,13 +40,12 @@ defmodule Carmen.Demo do
         Envelope.expand(acc, Envelope.from_geo(shape))
       end)
 
-    IO.puts("Envelope Calculated: #{inspect env}")
+    IO.puts("Envelope Calculated: #{inspect(env)}")
     env
   end
 
   def random_point(env) do
-    %Geo.Point{coordinates: { random_between(env.max_x, env.min_x),
-      random_between(env.max_y, env.min_y) }}
+    %Geo.Point{coordinates: {random_between(env.max_x, env.min_x), random_between(env.max_y, env.min_y)}}
   end
 
   def run(env, num_objects) do
@@ -53,39 +53,41 @@ defmodule Carmen.Demo do
 
     objects
     |> Enum.map(fn object ->
-        Task.async(fn ->
-          :timer.sleep(:rand.uniform(1000) + 1)
-          %{coordinates: {x0, y0}} = random_point(env)
-          %{coordinates: {x1, y1}} = random_point(env)
-          steps = 300
+      Task.async(fn ->
+        :timer.sleep(:rand.uniform(1000) + 1)
+        %{coordinates: {x0, y0}} = random_point(env)
+        %{coordinates: {x1, y1}} = random_point(env)
+        steps = 300
 
-          d_x = 0.0001 * (x1 - x0) / abs(x1 - x0) # ~10m/s
-          d_y = 0.0001 * (y1 - y0) / abs(y1 - y0)
+        # ~10m/s
+        d_x = 0.0001 * (x1 - x0) / abs(x1 - x0)
+        d_y = 0.0001 * (y1 - y0) / abs(y1 - y0)
 
-          Enum.map(1..steps, fn i ->
-            GenServer.cast(:meter, {:tap, :in})
-            point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
-            {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(object, point) end)
+        Enum.map(1..steps, fn i ->
+          GenServer.cast(:meter, {:tap, :in})
+          point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
+          {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(object, point) end)
 
-            case entered do
-              [] -> nil
-              _ -> GenServer.cast(:meter, {:tap, :enter})
-            end
+          case entered do
+            [] -> nil
+            _ -> GenServer.cast(:meter, {:tap, :enter})
+          end
 
-            case left do
-              [] -> nil
-              _ -> GenServer.cast(:meter, {:tap, :leave})
-            end
-            GenServer.cast(:meter, {:tap, :out})
-            GenServer.cast(:meter, {:measure, time})
+          case left do
+            [] -> nil
+            _ -> GenServer.cast(:meter, {:tap, :leave})
+          end
 
-            # sleep_time = Enum.max([1000 - time/1000, 1]) |> round
-            # :timer.sleep(sleep_time)
-            :timer.sleep(1000)
-          end)
+          GenServer.cast(:meter, {:tap, :out})
+          GenServer.cast(:meter, {:measure, time})
+
+          # sleep_time = Enum.max([1000 - time/1000, 1]) |> round
+          # :timer.sleep(sleep_time)
+          :timer.sleep(1000)
         end)
       end)
-    |> Enum.map(&(Task.await(&1, :infinity)))
+    end)
+    |> Enum.map(&Task.await(&1, :infinity))
 
     :ok
   end
@@ -94,8 +96,8 @@ defmodule Carmen.Demo do
   defp random_between(a, b), do: :rand.uniform() * (b - a) + a
 
   def clear_all() do
-    [Zone, ZoneEnv, MapCell] |>
-      Enum.map(&:mnesia.clear_table/1)
+    [Zone, ZoneEnv, MapCell]
+    |> Enum.map(&:mnesia.clear_table/1)
   end
 end
 
@@ -116,13 +118,15 @@ defmodule Meter do
 
   def init(_opts) do
     Process.send_after(self(), :print_stats, @interval)
-    {:ok, %{
-      in: [0],
-      out: [0],
-      enter: [0],
-      leave: [0],
-      proc_time: []
-    }}
+
+    {:ok,
+     %{
+       in: [0],
+       out: [0],
+       enter: [0],
+       leave: [0],
+       proc_time: []
+     }}
   end
 
   def handle_cast({:tap, field}, state) do
@@ -131,7 +135,7 @@ defmodule Meter do
   end
 
   def handle_cast({:measure, time}, %{proc_time: times} = state) do
-    new_times =  [time] ++ Enum.take(times, 9)
+    new_times = [time] ++ Enum.take(times, 9)
     {:noreply, state |> Map.put(:proc_time, new_times)}
   end
 
@@ -145,14 +149,14 @@ defmodule Meter do
     IO.puts("In: #{in_rate}/s | Out: #{out_rate}/s | Time: #{ave_time}us -> Enter: #{enter_rate}/s | Leave: #{leave_rate}/s")
     Process.send_after(self(), :print_stats, @interval)
 
-    new_in = [0] ++ state.in |> Enum.take(3)
-    new_out = [0] ++ state.out |> Enum.take(3)
-    new_enter = [0] ++ state.enter |> Enum.take(3)
-    new_leave = [0] ++ state.leave |> Enum.take(3)
+    new_in = ([0] ++ state.in) |> Enum.take(3)
+    new_out = ([0] ++ state.out) |> Enum.take(3)
+    new_enter = ([0] ++ state.enter) |> Enum.take(3)
+    new_leave = ([0] ++ state.leave) |> Enum.take(3)
 
     {:noreply, %{in: new_in, out: new_out, enter: new_enter, leave: new_leave, proc_time: state.proc_time}}
   end
 
   defp calc_average([]), do: 0
-  defp calc_average(values), do: Enum.sum(values) * 1.0 / length(values) |> round
+  defp calc_average(values), do: (Enum.sum(values) * 1.0 / length(values)) |> round
 end

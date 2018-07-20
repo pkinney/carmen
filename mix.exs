@@ -8,7 +8,7 @@ defmodule Carmen.Mixfile do
       elixir: "~> 1.5",
       description: description(),
       package: package(),
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -30,9 +30,8 @@ defmodule Carmen.Mixfile do
       {:spatial_hash, "~> 0.1.2"},
       {:topo, "~> 0.1.2"},
       {:uuid, "~> 1.1"},
-
       {:benchfella, "~> 0.3.5", only: :dev},
-      {:poison, "~> 2.0", only: [:test, :dev]},
+      {:poison, "~> 2.0", only: [:test, :dev]}
     ]
   end
 

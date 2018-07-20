@@ -9,61 +9,63 @@ defmodule Carmen.ZoneStoreTest do
   @in_concavity %Geo.Point{coordinates: {136.884831, 35.172137}}
   @in_shape3 %Geo.Point{coordinates: {136.8844503, 35.172896}}
 
-  @shape1 %Geo.Polygon{ coordinates: [
-          [
-            { 136.883908, 35.172133 },
-            { 136.884101, 35.171878 },
-            { 136.884782, 35.171646 },
-            { 136.885035, 35.171703 },
-            { 136.885035, 35.171927 },
-            { 136.884648, 35.171975 },
-            { 136.884702, 35.172313 },
-            { 136.885040, 35.172304 },
-            { 136.885045, 35.172567 },
-            { 136.884723, 35.172562 },
-            { 136.883908, 35.172133 }
-          ]
-        ]
-      }
+  @shape1 %Geo.Polygon{
+    coordinates: [
+      [
+        {136.883908, 35.172133},
+        {136.884101, 35.171878},
+        {136.884782, 35.171646},
+        {136.885035, 35.171703},
+        {136.885035, 35.171927},
+        {136.884648, 35.171975},
+        {136.884702, 35.172313},
+        {136.885040, 35.172304},
+        {136.885045, 35.172567},
+        {136.884723, 35.172562},
+        {136.883908, 35.172133}
+      ]
+    ]
+  }
 
-  @shape2 %Geo.Polygon{ coordinates: [
-          [
-              { 136.883817, 35.172479 },
-              { 136.883779, 35.171567 },
-              { 136.884423, 35.172111 },
-              { 136.883817, 35.172479 }
-          ]
-        ]
-      }
+  @shape2 %Geo.Polygon{
+    coordinates: [
+      [
+        {136.883817, 35.172479},
+        {136.883779, 35.171567},
+        {136.884423, 35.172111},
+        {136.883817, 35.172479}
+      ]
+    ]
+  }
 
-  @shape3 %Geo.Polygon{ coordinates: [
-          [
-            { 136.8841016292572, 35.17281732005817 },
-            { 136.88421428203583, 35.172694540711184 },
-            { 136.88479363918304, 35.1729839488754 },
-            { 136.88473999500275, 35.17311988265755 },
-            { 136.8841016292572, 35.17281732005817 }
-          ]
-        ]
-      }
+  @shape3 %Geo.Polygon{
+    coordinates: [
+      [
+        {136.8841016292572, 35.17281732005817},
+        {136.88421428203583, 35.172694540711184},
+        {136.88479363918304, 35.1729839488754},
+        {136.88473999500275, 35.17311988265755},
+        {136.8841016292572, 35.17281732005817}
+      ]
+    ]
+  }
 
-  @triangle_in_both %Geo.Polygon{ coordinates: [
-          [
-            { 136.88402116298676, 35.171269409724786 },
-            { 136.88427329063416, 35.171269409724786 },
-            { 136.88427329063416, 35.17257176117876 },
-            { 136.88402116298676, 35.171269409724786 }
-          ]
-        ]
-      }
-
+  @triangle_in_both %Geo.Polygon{
+    coordinates: [
+      [
+        {136.88402116298676, 35.171269409724786},
+        {136.88427329063416, 35.171269409724786},
+        {136.88427329063416, 35.17257176117876},
+        {136.88402116298676, 35.171269409724786}
+      ]
+    ]
+  }
 
   setup do
-    [Zone, ZoneEnv, MapCell] |>
-      Enum.map(&:mnesia.clear_table/1)
+    [Zone, ZoneEnv, MapCell]
+    |> Enum.map(&:mnesia.clear_table/1)
 
-    [ id1: Store.put_zone(@shape1),
-      id2: Store.put_zone(@shape2) ]
+    [id1: Store.put_zone(@shape1), id2: Store.put_zone(@shape2)]
   end
 
   test "put and get shape", %{id1: id} do
@@ -81,11 +83,11 @@ defmodule Carmen.ZoneStoreTest do
 
   test "intersecting zones for a given point", %{id1: id1, id2: id2} do
     assert Store.intersections(@in_shape1) == [id1]
-    assert Store.intersections(@in_both) |> Enum.sort == [id1, id2] |> Enum.sort
+    assert Store.intersections(@in_both) |> Enum.sort() == [id1, id2] |> Enum.sort()
   end
 
   test "intersecting zones for a given polygon", %{id1: id1, id2: id2} do
-    assert Store.intersections(@triangle_in_both) |> Enum.sort == [id1, id2] |> Enum.sort
+    assert Store.intersections(@triangle_in_both) |> Enum.sort() == [id1, id2] |> Enum.sort()
   end
 
   test "intersecting zones for a point inside concavity" do

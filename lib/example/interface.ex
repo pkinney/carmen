@@ -3,7 +3,7 @@ defmodule Carmen.Example.Interface do
 
   @behaviour Carmen.Interface
 
-  @die_after_ms if Mix.env == :test, do: 500, else: 60_000
+  @die_after_ms if Mix.env() == :test, do: 500, else: 60_000
 
   def sync_after_ms, do: 10
   def sync_after_count, do: 2
@@ -43,8 +43,9 @@ defmodule Carmen.Example.Interface do
 
   # events that are emitted each time the object moves, there will only be one
   # except in the case of an object entering or leaving multiple zones at once
-  def events(id, triggering_shape, enters, exits, :omitted, meta), do: events(id, triggering_shape, enters, exits, meta)
-  def events(id, triggering_shape, enters, exits, new_meta, meta), do: events(id, triggering_shape, enters, exits, Map.merge(meta, new_meta))
+  def events(id, shape, enters, exits, :omitted, meta), do: events(id, shape, enters, exits, meta)
+  def events(id, shape, enters, exits, new_meta, meta), do: events(id, shape, enters, exits, Map.merge(meta, new_meta))
+
   def events(id, _triggering_shape, enters, exits, meta) do
     Enum.each(enters, fn zone_id ->
       Logger.debug(fn -> "enter event emitted for object #{id} and zone #{zone_id} with meta #{meta}" end)
@@ -67,7 +68,7 @@ defmodule Carmen.Example.Interface do
 
   def register(id) do
     # Swarm.register_name({:via, :swarm, {:carmen, id}}, Carmen.Object.Supervisor, :register, [id])
-    Carmen.Object.Supervisor.register(id, [name: {:via, Registry, {Carmen.Registry, id}}])
+    Carmen.Object.Supervisor.register(id, name: {:via, Registry, {Carmen.Registry, id}})
   end
 
   def handle_msg({:call, _from}, {:swarm, :begin_handoff}, {name, delay}), do: {:reply, {:resume, delay}, {name, delay}}
