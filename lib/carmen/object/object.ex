@@ -13,8 +13,7 @@ defmodule Carmen.Object do
   def intersecting?(id, zone_id), do: safe_call(id, {:intersecting?, zone_id})
 
   def shutdown(id) do
-    id
-    |> @interface.lookup()
+    apply(@interface, :lookup, [id])
     |> case do
       :undefined ->
         :ok
@@ -27,11 +26,10 @@ defmodule Carmen.Object do
 
   defp safe_call(id, msg) do
     pid =
-      id
-      |> @interface.lookup()
+      apply(@interface, :lookup, [id])
       |> case do
         :undefined ->
-          @interface.register(id)
+          apply(@interface, :register, [id])
 
         pid ->
           {:ok, pid}

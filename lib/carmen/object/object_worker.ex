@@ -19,7 +19,7 @@ defmodule Carmen.Object.Worker do
   end
 
   def handle_event(:state_timeout, :load_object_state, :starting, %Data{id: id}) do
-    case @interface.load_object_state(id) do
+    case apply(@interface, :load_object_state, [id]) do
       {shape, inters, meta} ->
         {:next_state, :running, %Data{id: id, shape: shape, inters: inters, meta: meta}}
 
@@ -43,32 +43,32 @@ defmodule Carmen.Object.Worker do
         :running,
         %Data{inters: inters, meta: old_meta, processed: processed} = data
       ) do
-    if (id && new_meta == :omitted) || (id && @interface.valid?(new_meta, old_meta)) do
+    if (id && new_meta == :omitted) || (id && apply(@interface, :valid?, [new_meta, old_meta])) do
       new_inters = Carmen.Zone.Store.intersections(shape)
 
       enters = new_inters -- inters
       exits = inters -- new_inters
-      {:ok, meta} = @interface.events(id, shape, enters, exits, new_meta, old_meta)
+      {:ok, meta} = apply(@interface, :events, [id, shape, enters, exits, new_meta, old_meta])
 
       data = %Data{data | shape: shape, inters: new_inters, meta: meta, processed: processed + 1}
 
       cond do
-        @interface.sync_after_count() == :every ->
-          :ok = @interface.save_object_state(id, shape, inters, meta)
+        apply(@interface, :sync_after_count, []) == :every ->
+          :ok = apply(@interface, :save_object_state, [id, shape, inters, meta])
 
           actions = [
             {:reply, from, {enters, exits}},
-            {:state_timeout, @interface.die_after_ms(), :shutdown}
+            {:state_timeout, apply(@interface, :die_after_ms, []), :shutdown}
           ]
 
           {:keep_state, data, actions}
 
-        processed + 1 >= @interface.sync_after_count() ->
+        processed + 1 >= apply(@interface, :sync_after_count, []) ->
           actions = [
             {:reply, from, {enters, exits}},
             {:timeout, :infinity, :saving_object_state},
             {:next_event, :internal, :saving_object_state},
-            {:state_timeout, @interface.die_after_ms(), :shutdown}
+            {:state_timeout, apply(@interface, :die_after_ms, []), :shutdown}
           ]
 
           {:keep_state, data, actions}
@@ -76,8 +76,8 @@ defmodule Carmen.Object.Worker do
         true ->
           actions = [
             {:reply, from, {enters, exits}},
-            {:state_timeout, @interface.die_after_ms(), :shutdown},
-            {:timeout, @interface.sync_after_ms(), :saving_object_state}
+            {:state_timeout, apply(@interface, :die_after_ms, []), :shutdown},
+            {:timeout, apply(@interface, :sync_after_ms, []), :saving_object_state}
           ]
 
           {:keep_state, data, actions}
@@ -105,7 +105,7 @@ defmodule Carmen.Object.Worker do
 
   def handle_event(event, :saving_object_state, _state, %Data{id: id, shape: shape, inters: inters, meta: meta} = data)
       when event in [:internal, :timeout] do
-    :ok = @interface.save_object_state(id, shape, inters, meta)
+    :ok = apply(@interface, :save_object_state, [id, shape, inters, meta])
     {:next_state, :running, %{data | processed: 0}}
   end
 
@@ -127,12 +127,12 @@ defmodule Carmen.Object.Worker do
     :keep_state_and_data
   end
 
-  def handle_event({:call, from}, msg, _state, data), do: @interface.handle_msg({:call, from}, msg, data)
-  def handle_event(:cast, msg, _state, data), do: @interface.handle_msg(:cast, msg, data)
-  def handle_event(:info, msg, _state, data), do: @interface.handle_msg(:info, msg, data)
+  def handle_event({:call, from}, msg, _state, data), do: apply(@interface, :handle_msg, [{:call, from}, msg, data])
+  def handle_event(:cast, msg, _state, data), do: apply(@interface, :handle_msg, [:cast, msg, data])
+  def handle_event(:info, msg, _state, data), do: apply(@interface, :handle_msg, [:info, msg, data])
 
   defp shutdown(%Data{id: id, shape: shape, inters: inters, meta: meta}) do
-    :ok = @interface.save_object_state(id, shape, inters, meta)
+    :ok = apply(@interface, :save_object_state, [id, shape, inters, meta])
     :stop
   end
 end

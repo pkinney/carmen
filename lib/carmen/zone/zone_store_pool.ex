@@ -12,12 +12,12 @@ defmodule Carmen.Zone.Pool do
   end
 
   def init(opts) do
-    :ok = @interface.start_storage()
+    :ok = apply(@interface, :start_storage, [])
     :mnesia.create_table(Zone, attributes: [:id, :shape])
     :mnesia.create_table(ZoneEnv, attributes: [:id, :envelope])
     :mnesia.create_table(MapCell, attributes: [:hash, :objects])
 
-    :ok = @interface.load_zones()
+    :ok = apply(@interface, :load_zones, [])
 
     pool_opts = [
       name: {:local, @pool_name},
