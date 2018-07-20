@@ -2,7 +2,7 @@ defmodule Carmen.Object.Worker do
   @moduledoc false
   use GenStateMachine
 
-  @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
+  @interface Application.get_env(:carmen, :interface, Carmen.InterfaceExample)
 
   defmodule Data do
     @moduledoc false

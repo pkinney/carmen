@@ -1,5 +1,5 @@
 defmodule Carmen.Object do
-  @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
+  @interface Application.get_env(:carmen, :interface, Carmen.InterfaceExample)
 
   def update(id, shape), do: update(id, shape, :omitted)
   def update(id, shape, meta), do: safe_call(id, {:update, id, shape, meta})

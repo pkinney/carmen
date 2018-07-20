@@ -5,7 +5,7 @@ defmodule Carmen.Zone.Pool do
   @pool_name :zone_worker_pool
   @pool_size 200
   @pool_max_overflow 0
-  @interface Application.get_env(:carmen, :interface, Carmen.Example.Interface)
+  @interface Application.get_env(:carmen, :interface, Carmen.InterfaceExample)
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts)

@@ -113,7 +113,7 @@ defmodule Carmen.ObjectTest do
   test "should retrieve the object's initial state from long term storage when the first message arrives", _ do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)
-    pid = Carmen.Example.Interface.lookup(id)
+    pid = Carmen.InterfaceExample.lookup(id)
     {_state, data} = :sys.get_state(pid)
     assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{name: ^id}} = data
   end
@@ -122,7 +122,7 @@ defmodule Carmen.ObjectTest do
     id = UUID.uuid4()
     zone_id = UUID.uuid4()
     :ok = Object.put_state(id, {@in_shape1, [zone_id], %{direct: "meta"}})
-    pid = Carmen.Example.Interface.lookup(id)
+    pid = Carmen.InterfaceExample.lookup(id)
     {_state, data} = :sys.get_state(pid)
     assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{direct: "meta"}} = data
     # ensure that the lazy state load doesn't still happen and reset our state
@@ -134,7 +134,7 @@ defmodule Carmen.ObjectTest do
   test "should update the process state on every message", _ do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)
-    pid = Carmen.Example.Interface.lookup(id)
+    pid = Carmen.InterfaceExample.lookup(id)
     {_state, data} = :sys.get_state(pid)
     assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{name: ^id}} = data
 
@@ -171,7 +171,7 @@ defmodule Carmen.ObjectTest do
   test "should shut down the process when :die_after_ms expires", _ do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)
-    pid = Carmen.Example.Interface.lookup(id)
+    pid = Carmen.InterfaceExample.lookup(id)
     ref = Process.monitor(pid)
     assert_receive({:DOWN, ^ref, _, _, _}, 600)
   end

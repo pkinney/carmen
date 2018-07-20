@@ -1,4 +1,4 @@
-defmodule Carmen.Example.Interface do
+defmodule Carmen.InterfaceExample do
   require Logger
 
   @behaviour Carmen.Interface
