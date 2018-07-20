@@ -24,16 +24,16 @@ defmodule Carmen.Example.Interface do
   end
 
   def load_object_state(name) do
-    Logger.debug(fn -> "attempting to load previous state from long term storage for object #{name}" end)
+    Logger.debug(fn -> "attempting to load previous state from long term storage for object name #{name}" end)
     # to make it easy to test we have a static id "missing" that won't return anything
     unless name == "missing" do
       {_shape = %Geo.Point{}, _inters = [], _meta = %{name: name}}
     end
   end
 
-  def save_object_state(name, shape, intersecting_zones, meta) do
-    Logger.debug(fn -> "attempting to save state to long term storage for object #{name}" end)
-    :ets.insert(:carmen_tests, {name, shape, intersecting_zones, meta})
+  def save_object_state(id, shape, intersecting_zones, meta) do
+    Logger.debug(fn -> "attempting to save state to long term storage for object id #{id}" end)
+    :ets.insert(:carmen_tests, {id, shape, intersecting_zones, meta})
     :ok
   end
 
@@ -58,17 +58,17 @@ defmodule Carmen.Example.Interface do
     {:ok, meta}
   end
 
-  def lookup(id) do
-    # Swarm.whereis_name({:via, :swarm, {:carmen, id}})
-    case Registry.lookup(Carmen.Registry, id) do
+  def lookup(name) do
+    # Swarm.whereis_name({:via, :swarm, {:carmen, name}})
+    case Registry.lookup(Carmen.Registry, name) do
       [{pid, _}] -> pid
       _ -> :undefined
     end
   end
 
-  def register(id) do
-    # Swarm.register_name({:via, :swarm, {:carmen, id}}, Carmen.Object.Supervisor, :register, [id])
-    Carmen.Object.Supervisor.register(id, name: {:via, Registry, {Carmen.Registry, id}})
+  def register(name) do
+    # Swarm.register_name({:via, :swarm, {:carmen, name}}, Carmen.Object.Supervisor, :register, [name])
+    Carmen.Object.Supervisor.register(name, name: {:via, Registry, {Carmen.Registry, name}})
   end
 
   def handle_msg({:call, _from}, {:swarm, :begin_handoff}, {name, delay}), do: {:reply, {:resume, delay}, {name, delay}}

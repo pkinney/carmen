@@ -109,6 +109,10 @@ defmodule Carmen.Object.Worker do
     shutdown(data)
   end
 
+  def handle_event(:info, :shutdown, _state, data) do
+    shutdown(data)
+  end
+
   # either I'm missing something obvious or there's a bug in gen_statem because timeouts should show
   # up as a gen_statem event and be caught by the function above but occasionally this :info shows up
   def handle_event(:info, {:timeout, _, :shutdown}, _state, data) do
