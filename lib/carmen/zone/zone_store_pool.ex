@@ -16,6 +16,8 @@ defmodule Carmen.Zone.Pool do
     :mnesia.create_table(ZoneEnv, [attributes: [:id, :envelope]])
     :mnesia.create_table(MapCell, [attributes: [:hash, :objects]])
 
+    :ok = @interface.load_zones()
+
     pool_opts = [
       name: {:local, @pool_name},
       worker_module: Carmen.Zone.Worker,

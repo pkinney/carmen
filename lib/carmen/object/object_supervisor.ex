@@ -14,6 +14,6 @@ defmodule Carmen.Object.Supervisor do
   end
 
   def register(id, opts \\ nil) do
-    {:ok, _pid} = Supervisor.start_child(__MODULE__, [{id, opts}])
+    Supervisor.start_child(__MODULE__, [{id, opts}])
   end
 end

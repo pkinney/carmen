@@ -75,7 +75,7 @@ defmodule Carmen.ObjectTest do
     assert Object.update(UUID.uuid4(), @in_shape1) == {[id1], []}
   end
 
-  test "moving and object from one zone to another generates an event", %{id1: id1, id2: id2} do
+  test "moving an object from one zone to another generates an event", %{id1: id1, id2: id2} do
     id = UUID.uuid4()
     Object.update(id, @in_shape1)
     assert Object.update(id, @in_both) == {[id2], []}
@@ -101,5 +101,54 @@ defmodule Carmen.ObjectTest do
   test "return false for relationship between unknown object and shape", %{id1: id1, id2: _} do
     id = UUID.uuid4()
     refute Object.intersecting?(id, id1)
+  end
+
+  test "should cache a long term storage miss for an object that does not exist", _ do
+    id = "missing"
+    assert Object.update(id, @in_shape1) == :not_found
+  end
+
+  test "should retrieve the object's initial state from long term storage when the first message arrives", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    pid = Carmen.Example.Interface.lookup(id)
+    {_state, data} = :sys.get_state(pid)
+    assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{name: ^id}} = data
+  end
+
+  test "should update the process state on every message", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    pid = Carmen.Example.Interface.lookup(id)
+    {_state, data} = :sys.get_state(pid)
+    assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{name: ^id}} = data
+
+    Object.update(id, @in_shape1, %{custom: "meta"})
+    {_state, data} = :sys.get_state(pid)
+    assert %{id: ^id, shape: @in_shape1, inters: [_], meta: %{custom: "meta"}} = data
+  end
+
+  test "should save the object's state to long term storage after :sync_after_ms", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    assert [] = :ets.lookup(:carmen_tests, id)
+    Process.sleep(20)
+    assert [{_id, _shape, _inters, _meta}] = :ets.lookup(:carmen_tests, id)
+  end
+
+  test "should save the object's state to long term storage after :sync_after_count", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    assert [] = :ets.lookup(:carmen_tests, id)
+    Object.update(id, @in_shape3)
+    assert [{_id, _shape, _inters, _meta}] = :ets.lookup(:carmen_tests, id)
+  end
+
+  test "should shut down the process when :die_after_ms expires", _ do
+    id = UUID.uuid4()
+    Object.update(id, @in_shape1)
+    pid = Carmen.Example.Interface.lookup(id)
+    ref = Process.monitor(pid)
+    assert_receive({:DOWN, ^ref, _, _, _}, 600)
   end
 end

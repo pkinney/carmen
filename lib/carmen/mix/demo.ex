@@ -64,22 +64,20 @@ defmodule Carmen.Demo do
 
           Enum.map(1..steps, fn i ->
             GenServer.cast(:meter, {:tap, :in})
-            Task.async(fn ->
-              point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
-              {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(object, point) end)
+            point = %Geo.Point{coordinates: {x0 + i * d_x, y0 + i * d_y}}
+            {time, {entered, left}} = :timer.tc(fn -> Carmen.Object.update(object, point) end)
 
-              case entered do
-                [] -> nil
-                _ -> GenServer.cast(:meter, {:tap, :enter})
-              end
+            case entered do
+              [] -> nil
+              _ -> GenServer.cast(:meter, {:tap, :enter})
+            end
 
-              case left do
-                [] -> nil
-                _ -> GenServer.cast(:meter, {:tap, :leave})
-              end
-              GenServer.cast(:meter, {:tap, :out})
-              GenServer.cast(:meter, {:measure, time})
-            end)
+            case left do
+              [] -> nil
+              _ -> GenServer.cast(:meter, {:tap, :leave})
+            end
+            GenServer.cast(:meter, {:tap, :out})
+            GenServer.cast(:meter, {:measure, time})
 
             # sleep_time = Enum.max([1000 - time/1000, 1]) |> round
             # :timer.sleep(sleep_time)

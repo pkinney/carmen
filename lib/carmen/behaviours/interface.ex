@@ -14,15 +14,20 @@ defmodule Carmen.Interface do
   @type state :: {geo(), [id()], term()}
 
 
-  @callback load_zones() :: [{id(), closed_geo()} | {id(), closed_geo()}]
-  @callback object_state(object_id :: id()) :: state()
-  @callback objects_state() :: [state()]
+  @callback sync_after_ms() :: non_neg_integer()
+  @callback sync_after_count() :: non_neg_integer()
+  @callback die_after_ms() :: non_neg_integer()
+  @callback start_storage() :: :ok
 
-  @callback enter(object_id :: id(), zone_id :: id(), meta :: term()) :: :ok
-  @callback exit(object_id :: id(), zone_id :: id(), meta :: term()) :: :ok
+  @callback load_zones() :: [{id(), closed_geo()}]
+  @callback load_object_state(object_id :: id()) :: state()
+  @callback save_object_state(id(), geo(), [id()], term()) :: :ok | :error
+
+  @callback valid?(new_meta :: term(), meta :: term()) :: boolean()
+  @callback events(object_id :: id(), triggering_shape :: geo(), [enters :: id()], [exits :: id()], new_meta :: term(), meta :: term()) :: {:ok, term()}
 
   @callback lookup(object_id :: id()) :: pid() | :undefined
   @callback register(object_id :: id()) :: {:ok, pid()} | {:error, {:already_registered, pid()}}
-  @callback handle_msg(:call | :cast | :info, message :: term(), state :: term()) :: term()
+  @callback handle_msg({:call, from :: reference()} | :cast | :info, message :: term(), state :: term()) :: term()
 
 end

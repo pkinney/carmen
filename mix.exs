@@ -25,6 +25,7 @@ defmodule Carmen.Mixfile do
   defp deps do
     [
       {:geo, "~> 1.0"},
+      {:gen_state_machine, "~> 2.0"},
       {:poolboy, "~> 1.5"},
       {:spatial_hash, "~> 0.1.2"},
       {:topo, "~> 0.1.2"},
