@@ -123,6 +123,10 @@ defmodule Carmen.Object.Worker do
     shutdown(data)
   end
 
+  def handle_event({:call, from}, _, _, :not_found) do
+    {:keep_state_and_data, [{:reply, from, :not_found}]}
+  end
+
   def handle_event(_, _, _, :not_found) do
     :keep_state_and_data
   end
