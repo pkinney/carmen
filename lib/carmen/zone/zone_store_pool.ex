@@ -13,7 +13,7 @@ defmodule Carmen.Zone.Pool do
 
   def init(opts) do
     :ok = apply(@interface, :start_storage, [])
-    :mnesia.create_table(Zone, attributes: [:id, :shape])
+    :mnesia.create_table(Zone, attributes: [:id, :shape, :meta])
     :mnesia.create_table(ZoneEnv, attributes: [:id, :envelope])
     :mnesia.create_table(MapCell, attributes: [:hash, :objects])
 

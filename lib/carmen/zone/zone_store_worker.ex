@@ -11,7 +11,7 @@ defmodule Carmen.Zone.Worker do
     {:ok, opts}
   end
 
-  def handle_call({:put_zone, id, shape}, _from, grid) do
+  def handle_call({:put_zone, id, shape, meta}, _from, grid) do
     {:atomic, _} =
       Mnesia.transaction(fn ->
         case get_zone_by_id(id) do
@@ -19,7 +19,7 @@ defmodule Carmen.Zone.Worker do
           old_shape -> delete_shape_from_grid(id, old_shape, grid)
         end
 
-        Mnesia.write({Zone, id, shape})
+        Mnesia.write({Zone, id, shape, meta})
         Mnesia.write({ZoneEnv, id, Envelope.from_geo(shape)})
         add_shape_to_grid(id, shape, grid)
       end)
@@ -29,7 +29,7 @@ defmodule Carmen.Zone.Worker do
 
   def handle_call({:get_zone, id}, _from, grid) do
     case Mnesia.dirty_read({Zone, id}) do
-      [{Zone, ^id, shape}] -> {:reply, shape, grid}
+      [{Zone, ^id, shape, _meta}] -> {:reply, shape, grid}
       [] -> {:reply, nil, grid}
     end
   end
@@ -112,7 +112,7 @@ defmodule Carmen.Zone.Worker do
 
   defp get_zone_by_id(id) do
     case Mnesia.dirty_read({Zone, id}) do
-      [{Zone, _, zone}] -> zone
+      [{Zone, _, zone, _meta}] -> zone
       [] -> nil
     end
   end

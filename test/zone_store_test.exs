@@ -77,6 +77,11 @@ defmodule Carmen.ZoneStoreTest do
     assert Store.get_zone(id) == @shape2
   end
 
+  test "get meta stored on a zone", %{id1: id} do
+    Store.put_zone(id, @shape2, %{meta: "foo"})
+    assert Store.get_meta(id) == %{meta: "foo"}
+  end
+
   test "get a shape that doesn't exist" do
     assert Store.get_zone(UUID.uuid4()) == nil
   end

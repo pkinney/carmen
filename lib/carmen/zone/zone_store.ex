@@ -4,10 +4,10 @@ defmodule Carmen.Zone.Store do
   @doc false
   def put_zone(shape), do: put_zone(UUID.uuid4(), shape)
 
-  def put_zone(id, shape) do
+  def put_zone(id, shape, meta \\ nil) do
     :poolboy.transaction(
       @pool_name,
-      fn pid -> GenServer.call(pid, {:put_zone, id, shape}) end,
+      fn pid -> GenServer.call(pid, {:put_zone, id, shape, meta}) end,
       :infinity
     )
   end
@@ -18,6 +18,13 @@ defmodule Carmen.Zone.Store do
       fn pid -> GenServer.call(pid, {:get_zone, id}) end,
       :infinity
     )
+  end
+
+  def get_meta(id) do
+    case :mnesia.dirty_read({Zone, id}) do
+      [{Zone, ^id, _shape, meta}] -> meta
+      [] -> nil
+    end
   end
 
   def intersections(shape) do
