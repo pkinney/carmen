@@ -7,7 +7,7 @@ defmodule Carmen.Zone.Store do
   def put_zone(id, shape, meta \\ nil) do
     :poolboy.transaction(
       @pool_name,
-      fn pid -> GenServer.call(pid, {:put_zone, id, shape, meta}) end,
+      fn pid -> GenServer.call(pid, {:put_zone, id, shape, meta}, 30_000) end,
       :infinity
     )
   end
