@@ -44,6 +44,11 @@ defmodule Carmen.Zone.Worker do
     {:reply, res, grid}
   end
 
+  def handle_call({:cell_count, shape}, _from, grid) do
+    [x_range, y_range] = SpatialHash.hash_range(shape, grid)
+    {:reply, Enum.count(x_range) * Enum.count(y_range), grid}
+  end
+
   ##############################
   # Utility Functions
 

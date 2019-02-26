@@ -34,4 +34,12 @@ defmodule Carmen.Zone.Store do
       :infinity
     )
   end
+
+  def cell_count_estimate(shape) do
+    :poolboy.transaction(
+      @pool_name,
+      fn pid -> GenServer.call(pid, {:cell_count, shape}) end,
+      :infinity
+    )
+  end
 end
