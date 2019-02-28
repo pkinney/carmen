@@ -61,6 +61,21 @@ defmodule Carmen.ZoneStoreTest do
     ]
   }
 
+  @big_shape %Geo.Polygon{
+    coordinates: [
+      [
+        {-96.63986860535047, 33.1189},
+        {-96.65028980458632, 33.06940016819441},
+        {-96.72626930267523, 32.99356202601443},
+        {-96.97505019541367, 33.16839983180558},
+        {-96.89907069732476, 33.24423797398556},
+        {-96.84267664727919, 33.26142908516128},
+        {-96.68029645186552, 33.2119292533557},
+        {-96.63986860535047, 33.1189}
+      ]
+    ]
+  }
+
   setup do
     [Zone, ZoneEnv, MapCell]
     |> Enum.map(&:mnesia.clear_table/1)
@@ -104,5 +119,16 @@ defmodule Carmen.ZoneStoreTest do
     assert Store.intersections(@in_both) == [id2]
     assert Store.intersections(@in_shape1) == []
     assert Store.intersections(@in_shape3) == [id1]
+  end
+
+  test "get estimated cell count for shape" do
+    assert Store.cell_count_estimate(@shape1) == 6
+    assert Store.cell_count_estimate(@big_shape) == 90653
+
+    assert Store.cell_count_estimate(@big_shape) == 
+      @big_shape
+        |> Envelope.from_geo 
+        |> Envelope.to_geo
+        |> Store.cell_count_estimate
   end
 end
