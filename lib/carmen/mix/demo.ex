@@ -28,7 +28,7 @@ defmodule Carmen.Demo do
       |> Poison.decode!()
       |> Map.fetch!("features")
       |> Enum.map(& &1["geometry"])
-      |> Enum.map(&Geo.JSON.decode/1)
+      |> Enum.map(&Geo.JSON.decode!/1)
 
     IO.puts("Adding #{length(features)} features...")
 
