@@ -24,11 +24,11 @@ defmodule Carmen.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:geo, "~> 1.0"},
+      {:geo, "~> 3.1"},
       {:gen_state_machine, "~> 2.0"},
       {:poolboy, "~> 1.5"},
       {:spatial_hash, "~> 0.1.6"},
-      {:topo, "~> 0.1.2"},
+      {:topo, path: "~> 0.3.0"},
       {:uuid, "~> 1.1"},
       {:benchfella, "~> 0.3.5", only: :dev},
       {:ex_doc, ">= 0.0.0", only: :dev},
