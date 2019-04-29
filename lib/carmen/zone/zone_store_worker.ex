@@ -27,6 +27,21 @@ defmodule Carmen.Zone.Worker do
     {:reply, id, grid}
   end
 
+  def handle_call({:remove_zone, id}, _from, grid) do
+    {:atomic, _} =
+      Mnesia.transaction(fn ->
+        case get_zone_by_id(id) do
+          nil -> nil
+          old_shape -> delete_shape_from_grid(id, old_shape, grid)
+        end
+
+        Mnesia.delete({Zone, id})
+        Mnesia.delete({ZoneEnv, id})
+      end)
+
+    {:reply, :ok, grid}
+  end
+
   def handle_call({:get_zone, id}, _from, grid) do
     case Mnesia.dirty_read({Zone, id}) do
       [{Zone, ^id, shape, _meta}] -> {:reply, shape, grid}
