@@ -12,6 +12,14 @@ defmodule Carmen.Zone.Store do
     )
   end
 
+  def remove_zone(id) do
+    :poolboy.transaction(
+      @pool_name,
+      fn pid -> GenServer.call(pid, {:remove_zone, id}, 30_000) end,
+      :infinity
+    )
+  end
+
   def get_zone(id) do
     :poolboy.transaction(
       @pool_name,

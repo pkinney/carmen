@@ -101,6 +101,11 @@ defmodule Carmen.ZoneStoreTest do
     assert Store.get_zone(UUID.uuid4()) == nil
   end
 
+  test "put, delete, and get shape", %{id1: id} do
+    assert :ok = Store.remove_zone(id)
+    assert Store.get_zone(id) == nil
+  end
+
   test "intersecting zones for a given point", %{id1: id1, id2: id2} do
     assert Store.intersections(@in_shape1) == [id1]
     assert Store.intersections(@in_both) |> Enum.sort() == [id1, id2] |> Enum.sort()

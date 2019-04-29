@@ -22,3 +22,5 @@ erl_crash.dump
 /bench
 /Mnesia*
 .DS_Store
+.elixir_ls
+.tool-versions
